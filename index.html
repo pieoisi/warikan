@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>テニスコート割り勘ツール</title>
+
+<!-- html2canvas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+/* ===== 基本設定 ===== */
+:root {
+  --bg: #f7f8fa;
+  --card: #ffffff;
+  --text: #1a1a1a;
+  --sub: #6b7280;
+  --border: #e5e7eb;
+  --accent: #2563eb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ===== 見出し ===== */
+h2 {
+  font-size: 22px;
+  margin-bottom: 16px;
+}
+
+/* ===== 入力エリア ===== */
+input {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* ===== テーブル ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+th {
+  background: #f1f3f5;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--sub);
+}
+
+td, th {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+/* ===== ボタン ===== */
+button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+button + button {
+  margin-left: 8px;
+}
+
+/* ===== 結果カード（画像化対象） ===== */
+#resultBox {
+  margin-top: 24px;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  width: 320px;
+
+  /* 画像化時の安定性確保 */
+  box-shadow: none;
+}
+
+/* タイトル */
+#resultBox h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* リスト */
+#resultList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#resultList li {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 15px;
+  border-bottom: 1px solid var(--border);
+}
+
+#resultList li:last-child {
+  border-bottom: none;
+}
+
+/* 名前と金額の視覚分離 */
+#resultList li span.name {
+  color: var(--text);
+}
+
+#resultList li span.price {
+  font-weight: 600;
+}
+</style>
+</head>
+
+<body>
+
+<h2>テニスコート割り勘</h2>
+
+<p>
+合計料金：
+<input id="total" type="number" value="1500"> 円
+</p>
+
+<table id="table">
+  <tr>
+    <th>名前</th>
+    <th>利用分</th>
+  </tr>
+</table>
+
+<button onclick="addRow()">行追加</button>
+<button onclick="calc()">計算</button>
+<button onclick="downloadImage()">画像保存</button>
+
+<!-- 結果表示（画像化対象） -->
+<div id="resultBox">
+  <h3 id="resultTitle">割り勘結果</h3>
+  <ul id="resultList"></ul>
+</div>
+
+<script>
+
+// 行追加
+function addRow() {
+  const table = document.getElementById("table");
+  const row = table.insertRow();
+
+  row.innerHTML = `
+    <td><input placeholder="名前"></td>
+    <td><input type="number" value="0"></td>
+  `;
+}
+
+// 計算処理
+function calc() {
+  const total = Number(document.getElementById("total").value);
+  const rows = document.querySelectorAll("#table tr");
+
+  let sum = 0;
+
+  // 合計分
+  rows.forEach((r, i) => {
+    if (i === 0) return;
+    sum += Number(r.cells[1].children[0].value);
+  });
+
+  if (sum === 0) {
+    alert("利用時間が0です");
+    return;
+  }
+
+  const perMin = total / sum;
+
+  const list = document.getElementById("resultList");
+  list.innerHTML = "";
+
+  // タイトル更新
+  document.getElementById("resultTitle").textContent =
+    `割り勘結果（合計 ${total}円）`;
+
+  // 各人計算
+  rows.forEach((r, i) => {
+    if (i === 0) return;
+
+    const name = r.cells[0].children[0].value || `人${i}`;
+    const minutes = Number(r.cells[1].children[0].value);
+
+    if (minutes <= 0) return;
+
+    const cost = Math.round(minutes * perMin);
+
+    const li = document.createElement("li");
+    li.textContent = `${name}：${cost}円`;
+    list.appendChild(li);
+  });
+}
+
+// 画像保存
+function downloadImage() {
+  const target = document.getElementById("resultBox");
+
+  html2canvas(target).then(canvas => {
+    const link = document.createElement("a");
+    link.download = "warikan.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  });
+}
+
+// 初期6人分
+for (let i = 0; i < 6; i++) addRow();
+
+</script>
+
+</body>
+</html>
