@@ -1,249 +1,297 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
-<meta charset="UTF-8">
-<title>テニスコート割り勘ツール</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>テニスコート割り勘ツール</title>
 
-<!-- html2canvas -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-<style>
-/* ===== 基本設定 ===== */
-:root {
-  --bg: #f7f8fa;
-  --card: #ffffff;
-  --text: #1a1a1a;
-  --sub: #6b7280;
-  --border: #e5e7eb;
-  --accent: #2563eb;
-}
+    <style>
+        /* ===== 基本 ===== */
+        :root {
+            --bg: #f5f6f8;
+            --card: #ffffff;
+            --text: #111827;
+            --sub: #6b7280;
+            --border: #e5e7eb;
+            --accent: #2563eb;
+        }
 
-* {
-  box-sizing: border-box;
-}
+        * {
+            box-sizing: border-box;
+        }
 
-body {
-  margin: 0;
-  padding: 24px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-}
+        body {
+            margin: 0;
+            padding: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
 
-/* ===== 見出し ===== */
-h2 {
-  font-size: 22px;
-  margin-bottom: 16px;
-}
+        /* ===== 見出し ===== */
+        h2 {
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
 
-/* ===== 入力エリア ===== */
-input {
-  padding: 6px 8px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 14px;
-}
+        /* ===== 入力エリア ===== */
+        p {
+            margin: 10px 0;
+        }
 
-input:focus {
-  outline: none;
-  border-color: var(--accent);
-}
+        input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            /* iOSズーム防止 */
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
 
-/* ===== テーブル ===== */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: var(--card);
-  border-radius: 10px;
-  overflow: hidden;
-  margin-bottom: 16px;
-}
+        /* ===== テーブル → スマホではカード化 ===== */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+        }
 
-th {
-  background: #f1f3f5;
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--sub);
-}
+        th {
+            display: none;
+            /* ヘッダーは非表示 */
+        }
 
-td, th {
-  padding: 10px;
-  border-bottom: 1px solid var(--border);
-}
+        tr {
+            display: block;
+            background: var(--card);
+            border-radius: 12px;
+            padding: 10px;
+            border: 1px solid var(--border);
+        }
 
-tr:last-child td {
-  border-bottom: none;
-}
+        td {
+            display: block;
+            border: none;
+            padding: 6px 0;
+        }
 
-/* ===== ボタン ===== */
-button {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 8px;
-  background: var(--accent);
-  color: white;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
+        td input {
+            width: 100%;
+        }
 
-button:hover {
-  background: #1d4ed8;
-}
+        /* ラベルを疑似的に表示 */
+        td:first-child::before {
+            content: "名前";
+            display: block;
+            font-size: 12px;
+            color: var(--sub);
+            margin-bottom: 2px;
+        }
 
-button + button {
-  margin-left: 8px;
-}
+        td:nth-child(2)::before {
+            content: "利用分";
+            display: block;
+            font-size: 12px;
+            color: var(--sub);
+            margin-bottom: 2px;
+        }
 
-/* ===== 結果カード（画像化対象） ===== */
-#resultBox {
-  margin-top: 24px;
-  padding: 20px;
-  background: #ffffff;
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  width: 320px;
+        /* ===== ボタン ===== */
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 15px;
+            border: none;
+            border-radius: 10px;
+            background: var(--accent);
+            color: white;
+            cursor: pointer;
+        }
 
-  /* 画像化時の安定性確保 */
-  box-shadow: none;
-}
+        button:active {
+            background: #1d4ed8;
+        }
 
-/* タイトル */
-#resultBox h3 {
-  margin: 0 0 12px 0;
-  font-size: 16px;
-  font-weight: 600;
-}
+        /* ===== 結果カード（画像化対象） ===== */
+        #resultBox {
+            margin-top: 20px;
+            padding: 18px;
+            background: #ffffff;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            width: 100%;
+            max-width: 320px;
+        }
 
-/* リスト */
-#resultList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
+        /* タイトル */
+        #resultBox h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            text-align: center;
+        }
 
-#resultList li {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 0;
-  font-size: 15px;
-  border-bottom: 1px solid var(--border);
-}
+        /* リスト */
+        #resultList {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
 
-#resultList li:last-child {
-  border-bottom: none;
-}
+        #resultList li {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 16px;
+            border-bottom: 1px solid var(--border);
+        }
 
-/* 名前と金額の視覚分離 */
-#resultList li span.name {
-  color: var(--text);
-}
+        #resultList li:last-child {
+            border-bottom: none;
+        }
 
-#resultList li span.price {
-  font-weight: 600;
-}
-</style>
+        /* 金額を強調 */
+        .price {
+            font-weight: 600;
+        }
+
+        /* ===== スマホ幅最適化 ===== */
+        @media (min-width: 600px) {
+            body {
+                max-width: 480px;
+                margin: 0 auto;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-<h2>テニスコート割り勘</h2>
+    <h2>テニスコート割り勘</h2>
 
-<p>
-合計料金：
-<input id="total" type="number" value="1500"> 円
-</p>
+    <p>
+        合計料金：
+        <input id="total" type="number" value="1500"> 円
+    </p>
 
-<table id="table">
-  <tr>
-    <th>名前</th>
-    <th>利用分</th>
-  </tr>
-</table>
+    <table id="table">
+        <tr>
+            <th>名前</th>
+            <th>利用分</th>
+            <th></th>
+        </tr>
+    </table>
 
-<button onclick="addRow()">行追加</button>
-<button onclick="calc()">計算</button>
-<button onclick="downloadImage()">画像保存</button>
+    <button onclick="addRow()">行追加</button>
+    <button onclick="calc()">計算</button>
+    <button onclick="downloadImage()">画像保存</button>
 
-<!-- 結果表示（画像化対象） -->
-<div id="resultBox">
-  <h3 id="resultTitle">割り勘結果</h3>
-  <ul id="resultList"></ul>
-</div>
+    <!-- 結果表示（画像化対象） -->
+    <div id="resultBox">
+        <h3 id="resultTitle">割り勘結果</h3>
+        <ul id="resultList"></ul>
+    </div>
 
-<script>
+    <script>
 
-// 行追加
-function addRow() {
-  const table = document.getElementById("table");
-  const row = table.insertRow();
+        // 行追加
+        function addRow(name = "", minutes = "") {
+            const table = document.getElementById("table");
+            const row = table.insertRow();
 
-  row.innerHTML = `
-    <td><input placeholder="名前"></td>
-    <td><input type="number" value="0"></td>
+            row.innerHTML = `
+    <td><input placeholder="名前" value="${name}"></td>
+    <td><input type="number" placeholder="分" value="${minutes}"></td>
+    <td><button onclick="removeRow(this)">削除</button></td>
   `;
-}
 
-// 計算処理
-function calc() {
-  const total = Number(document.getElementById("total").value);
-  const rows = document.querySelectorAll("#table tr");
+            const inputs = row.querySelectorAll("input");
 
-  let sum = 0;
+            // 入力があったら新しい行を追加（最後の行のみ）
+            inputs.forEach(input => {
+                input.addEventListener("input", () => {
+                    const rows = document.querySelectorAll("#table tr");
+                    const lastRow = rows[rows.length - 1];
 
-  // 合計分
-  rows.forEach((r, i) => {
-    if (i === 0) return;
-    sum += Number(r.cells[1].children[0].value);
-  });
+                    if (row === lastRow) {
+                        const nameVal = inputs[0].value.trim();
+                        const minVal = inputs[1].value;
 
-  if (sum === 0) {
-    alert("利用時間が0です");
-    return;
-  }
+                        if (nameVal !== "" || minVal !== "") {
+                            addRow(); // 新しい空行を追加
+                        }
+                    }
+                });
+            });
+        }
+        function removeRow(btn) {
+            const row = btn.closest("tr");
+            row.remove();
+        }
+        // 計算処理
+        function calc() {
+            const total = Number(document.getElementById("total").value);
+            const rows = document.querySelectorAll("#table tr");
 
-  const perMin = total / sum;
+            let sum = 0;
 
-  const list = document.getElementById("resultList");
-  list.innerHTML = "";
+            // 合計分
+            rows.forEach((r, i) => {
+                if (i === 0) return;
+                sum += Number(r.cells[1].children[0].value);
+            });
 
-  // タイトル更新
-  document.getElementById("resultTitle").textContent =
-    `割り勘結果（合計 ${total}円）`;
+            if (sum === 0) {
+                alert("利用時間が0です");
+                return;
+            }
 
-  // 各人計算
-  rows.forEach((r, i) => {
-    if (i === 0) return;
+            const perMin = total / sum;
 
-    const name = r.cells[0].children[0].value || `人${i}`;
-    const minutes = Number(r.cells[1].children[0].value);
+            const list = document.getElementById("resultList");
+            list.innerHTML = "";
 
-    if (minutes <= 0) return;
+            // タイトル更新
+            document.getElementById("resultTitle").textContent =
+                `割り勘結果（合計 ${total}円）`;
 
-    const cost = Math.round(minutes * perMin);
+            // 各人計算
+            rows.forEach((r, i) => {
+                if (i === 0) return;
 
-    const li = document.createElement("li");
-    li.textContent = `${name}：${cost}円`;
-    list.appendChild(li);
-  });
-}
+                const name = r.cells[0].children[0].value || `人${i}`;
+                const minutes = Number(r.cells[1].children[0].value);
 
-// 画像保存
-function downloadImage() {
-  const target = document.getElementById("resultBox");
+                if (minutes <= 0) return;
 
-  html2canvas(target).then(canvas => {
-    const link = document.createElement("a");
-    link.download = "warikan.png";
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-  });
-}
+                const cost = Math.round(minutes * perMin);
 
-// 初期6人分
-for (let i = 0; i < 6; i++) addRow();
+                const li = document.createElement("li");
+                li.innerHTML = `
+  <span>${name}</span>
+  <span class="price">${cost}円</span>
+`; list.appendChild(li);
+            });
+        }
 
-</script>
+        // 画像保存
+        function downloadImage() {
+            const target = document.getElementById("resultBox");
+
+            html2canvas(target).then(canvas => {
+                const link = document.createElement("a");
+                link.download = "warikan.png";
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+            });
+        }
+
+        addRow();
+    </script>
 
 </body>
+
 </html>
